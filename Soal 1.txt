@@ -1,0 +1,150 @@
+mysql > use sakila
+
+SOAL 1 : Panggung Sandiwara
+	
+1. Tampilkan daftar 10 film komedi dengan durasi tersingkat. Urutkan data berdasarkan film dengan durasi terpendek.
+
+	Jawaban :
+
+ mysql> select film.title, category.name as category, film.length
+    -> from film, category, film_category
+    -> where film.film_id = film_category.film_id and category.category_id = film_category.category_id and category.name in ("Comedy")
+    -> order by film.length asc 
+    -> limit 10;
+
+	Outpot :
+
++------------------+----------+--------+
+| title            | category | length |
++------------------+----------+--------+
+| DOWNHILL ENOUGH  | Comedy   |     47 |
+| PARADISE SABRINA | Comedy   |     48 |
+| HEAVEN FREEDOM   | Comedy   |     48 |
+| HURRICANE AFFAIR | Comedy   |     49 |
+| LION UNCUT       | Comedy   |     50 |
+| ZORRO ARK        | Comedy   |     50 |
+| CLOSER BANG      | Comedy   |     58 |
+| AIRPLANE SIERRA  | Comedy   |     62 |
+| LONELY ELEPHANT  | Comedy   |     67 |
+| DOOM DANCING     | Comedy   |     68 |
++------------------+----------+--------+
+10 rows in set (0.05 sec)
+
+
+2. Tampilkan daftar lengkap kategori film beserta jumlah film tiap kategori & rata-rata harga sewa DVD film tiap kategori.
+ Urutkan data dari kategori dengan jumlah film terbanyak. 
+Kolom yang diwajibkan ada minimal adalah kategori, jumlah film dan rata-rata harga sewa.
+
+	Jawaban : 
+
+mysql > select category.name as kategori, count(distinct film.film_id) as jumlahMovie,
+avg(film.rental_rate) as rataHargaSewa from category inner join film_category 
+-> on category.category_id = film_category.category_id 
+->inner join film on film_category.film_id = film.film_id group by category.name 
+->order by jumlahMovie desc;
+
++-------------+-------------+---------------+
+| kategori    | jumlahMovie | rataHargaSewa |
++-------------+-------------+---------------+
+| Sports      |          74 |      3.125135 |
+| Foreign     |          73 |      3.099589 |
+| Family      |          69 |      2.758116 |
+| Documentary |          68 |      2.666471 |
+| Animation   |          66 |      2.808182 |
+| Action      |          64 |      2.646250 |
+| New         |          63 |      3.116984 |
+| Drama       |          62 |      3.022258 |
+| Games       |          61 |      3.252295 |
+| Sci-Fi      |          61 |      3.219508 |
+| Children    |          60 |      2.890000 |
+| Comedy      |          58 |      3.162414 |
+| Classics    |          57 |      2.744386 |
+| Travel      |          57 |      3.235614 |
+| Horror      |          56 |      3.025714 |
+| Music       |          51 |      2.950784 |
++-------------+-------------+---------------+
+16 rows in set (0.01 sec)
+
+
+
+3. Tampilkan daftar lengkap rating film beserta keterangan arti rating & jumlah film tiap rating. 
+Kolom yang diwajibkan ada minimal adalah rating, keterangan rating dan jumlah film.
+
+	Jawaban :
+
+
+mysql> create temporary table rating_temp(        
+    -> rating varchar(50),
+    -> keterangan varchar(50) 
+    -> );
+
+mysql> insert into rating_temp values
+    -> ("G", "General Audiences"),
+    -> ("PG", "Parental Guidance Suggested"),
+    -> ("PG-13", "Parental Guidances for Under 13"),
+    -> ("R", "Restricted"),
+    -> ("NC-17", "No Children Under 17 Admitted");
+
+mysql> select film.rating as rating, rating_temp.keterangan as keterangan, count(film.title) as jumlahMovie
+    -> from film, rating_temp
+    -> where film.rating = rating_temp.rating
+    -> group by film.rating;
+
+
+
+4. Tampilkan daftar 10 aktor/aktris yang paling banyak membintangi film.
+Kolom yang ditampilkan minimal: 
+id aktor, nama depan, nama belakang dan jumlah film yang dibintangi kemudian urutkan dari aktor/aktris yang membintangi film terbanyak.
+
+
+	Jawaban :
+
+mysql > select actor.actor_id, actor.first_name, actor.last_name, count(film.film_id) as jumlahMovie
+-> from film inner join film_actor on film.film_id = film_actor.film_id 
+-> inner join actor on film_actor.actor_id = actor.actor_id group by actor.actor_id 
+-> order by jumlahMovie desc limit 10;
+
+
+5.Dari soal sebelumnya diketahui Gina Degeneres merupakan aktris yang paling banyak membintangi film, dengan total 42 judul film.
+ Kategori film apakah yang paling banyak dibintanginya? Untuk mengetahuinya,
+ tampilkan daftar kategori film beserta jumlah film yang pernah dibintangi oleh Gina Degeneres.
+ Kolom yang diwajibkan ada yaitu kategori film dan jumlah film yang dibintangi.
+
+	Jawaban :
+
+mysql> select category.name as category, count(film.title) as jumlah_Movie   
+    -> from actor, film, film_actor, film_category, category
+    -> where actor.actor_id = film_actor.actor_id and film.film_id = film_actor.film_id and film.film_id = film_category.
+film_id and category.category_id = film_category.category_id and actor.first_name in ("GINA") and actor.last_name in ("DEGENERES") 
+    -> group by category.name;
+
+
+6. Dari soal sebelumnya diketahui Gina Degeneres paling banyak membintangi film bergenre science-fiction, dengan total 7 judul film.
+ Tampilkan daftar judul film sci-fi yang pernah dibintangi oleh Gina Degeneres. Kolom yang diwajibkan ada yaitu judul film dan kategorinya.
+
+
+	Jawaban :
+
+
+mysql> select film.title as title, category.name as category
+    -> from actor, film, film_actor, film_category, category
+    -> where actor.actor_id = film_actor.actor_id and film.film_id = film_actor.film_id and film.film_id = film_category.
+film_id and category.category_id = film_category.category_id and actor.first_name in ("GINA") and actor.last_name in ("DEGENERES") and category.name in ("Sci-Fi");
+
+7. Jawaban Nomor 7:
+
+mysql> select actor.actor_id, actor.first_name, actor.last_name, count(film.title) as jumlah_Movie
+    -> from actor, film, film_actor, film_category, category
+    -> where actor.actor_id = film_actor.actor_id and film.film_id = film_actor.film_id and film.film_id = film_category.
+film_id and category.category_id = film_category.category_id and category.name in ("Horror")
+    -> group by actor.actor_id
+    -> order by count(film.title) desc
+    -> limit 10;
+
+8. Jawaban Nomor 8:
+
+mysql> select film.title as title, category.name as category
+    -> from actor, film, film_actor, film_category, category
+    -> where actor.actor_id = film_actor.actor_id and film.film_id = film_actor.film_id and film.film_id = film_category.
+film_id and category.category_id = film_category.category_id and category.name in ("Horror") and actor.first_name in ("JULIA") and actor.last_name in ("MCQUEEN");
+
